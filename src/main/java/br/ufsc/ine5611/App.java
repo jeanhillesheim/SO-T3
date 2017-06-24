@@ -3,6 +3,7 @@ package br.ufsc.ine5611;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -30,8 +31,8 @@ public class App {
         final Process process = processBuilder.start();
         SignerClient signerClient = new SignerClient(process.getOutputStream(), process.getInputStream());
 
-        signerClient.sign(pathToTemp.toFile());
         process.waitFor();
+        signerClient.sign(pathToTemp.toFile());
         signerClient.end();
 
         readTempFileHash(file);
@@ -45,14 +46,19 @@ public class App {
 
             FileChannel fileChannel = (FileChannel) Files.newByteChannel(
                 path,
-                EnumSet.of(StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
+                EnumSet.of(StandardOpenOption.READ, StandardOpenOption.WRITE)
             );
             mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 4 + file.length() + 32);
             fileChannel.close();
 
             if (mappedByteBuffer != null) {
 
-                byte[] arrayBytes = Files.readAllBytes(file.toPath());
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+                byte[] arrayBytes = new byte[(int)randomAccessFile.length()];
+                randomAccessFile.readFully(arrayBytes);
+//                byte[] bytes =
+
+//                byte[] arrayBytes = Files.readAllBytes(file.toPath());
 
                 mappedByteBuffer.putInt(0, (int) file.length());
 
@@ -71,7 +77,6 @@ public class App {
 
         for (int i = 0; i < signature.length; i++) {
             signature[i] = mappedByteBuffer.get(4 + (int)file.length() + i);
-            System.out.println(signature[i]);
         }
 
         System.out.println(Base64.getEncoder().encodeToString(signature));
