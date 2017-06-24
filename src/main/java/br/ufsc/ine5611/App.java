@@ -31,12 +31,11 @@ public class App {
         final Process process = processBuilder.start();
         SignerClient signerClient = new SignerClient(process.getOutputStream(), process.getInputStream());
 
-        process.waitFor();
         signerClient.sign(pathToTemp.toFile());
+        process.waitFor();
         signerClient.end();
 
         readTempFileHash(file);
-
     }
 
     private static Path createTempFile(File file) {
