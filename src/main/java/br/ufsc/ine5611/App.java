@@ -8,9 +8,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -19,9 +16,7 @@ public class App {
 
     private static MappedByteBuffer mappedByteBuffer;
 
-    private static final Object lock = new Object();
-
-    public synchronized static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         List<String> command = new ArrayList<>();
         command.add(args[0]);
         File file = new File(args[1]);
@@ -36,8 +31,7 @@ public class App {
         SignerClient signerClient = new SignerClient(process.getOutputStream(), process.getInputStream());
 
         signerClient.sign(pathToTemp.toFile());
-//        App.class.wait();
-//        App.class.notify();
+        process.waitFor();
         signerClient.end();
 
         readTempFileHash(file);
@@ -47,20 +41,11 @@ public class App {
     private static Path createTempFile(File file) {
         Path path = null;
         try {
-            Set<PosixFilePermission> permissions = new HashSet<>();
-            permissions.add(PosixFilePermission.OWNER_READ);
-            permissions.add(PosixFilePermission.OWNER_WRITE);
-            permissions.add(PosixFilePermission.GROUP_READ);
-            permissions.add(PosixFilePermission.GROUP_WRITE);
-            permissions.add(PosixFilePermission.OTHERS_READ);
-            permissions.add(PosixFilePermission.OTHERS_WRITE);
-            FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(permissions);
-
-            path = Files.createTempFile("temp", null, fileAttributes);
+            path = Files.createTempFile("temp", null);
 
             FileChannel fileChannel = (FileChannel) Files.newByteChannel(
-                    path,
-                    EnumSet.of(StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
+                path,
+                EnumSet.of(StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
             );
             mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 4 + file.length() + 32);
             fileChannel.close();
