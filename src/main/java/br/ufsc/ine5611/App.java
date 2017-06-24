@@ -55,9 +55,6 @@ public class App {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 byte[] arrayBytes = new byte[(int)randomAccessFile.length()];
                 randomAccessFile.readFully(arrayBytes);
-//                byte[] bytes =
-
-//                byte[] arrayBytes = Files.readAllBytes(file.toPath());
 
                 mappedByteBuffer.putInt(0, (int) file.length());
 
