@@ -51,10 +51,12 @@ public class App {
             fileChannel.close();
 
             if (mappedByteBuffer != null) {
-
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-                byte[] arrayBytes = new byte[(int)randomAccessFile.length()];
-                randomAccessFile.readFully(arrayBytes);
+                FileInputStream fileInputStream = new FileInputStream(file);
+                byte[] arrayBytes = new byte[(int) file.length()];
+                fileInputStream.read(arrayBytes);
+//                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+//                byte[] arrayBytes = new byte[(int)randomAccessFile.length()];
+//                randomAccessFile.readFully(arrayBytes);
 
                 mappedByteBuffer.putInt(0, (int) file.length());
 
